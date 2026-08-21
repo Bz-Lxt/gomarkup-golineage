@@ -1,0 +1,290 @@
+@import 'tailwindcss';
+
+/* 字体本地打包：国内网络下 Google Fonts 不可达，且离线部署是硬需求。
+   只引入实际用到的字重，避免把整套字族塞进产物。 */
+@import '@fontsource/chakra-petch/500.css';
+@import '@fontsource/chakra-petch/600.css';
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+@theme {
+  /* ---- 骨架色 ---- */
+  --color-void: #07090e;
+  --color-panel: #0e121a;
+  --color-elevated: #151a24;
+  --color-line: #222a38;
+  --color-line-strong: #2e3a4d;
+  --color-ink: #e6eaf2;
+  --color-ink-dim: #8b95a8;
+  --color-ink-mute: #5a6577;
+
+  /* ---- 语义色 ---- */
+  --color-signal: #2dd4bf;
+  --color-amber: #f5a524;
+  --color-danger: #f2555a;
+  --color-violet: #a78bfa;
+
+  /* ---- 资产类型色（与后端 NodeType 一一对应）---- */
+  --color-t-server: #5b8ff9;
+  --color-t-database: #5ad8a6;
+  --color-t-application: #f6bd16;
+  --color-t-api: #e8684a;
+  --color-t-person: #6dc8ec;
+  --color-t-account: #9270ca;
+  --color-t-middleware: #ff9d4d;
+  --color-t-storage: #269a99;
+
+  /* ---- 字体 ---- */
+  --font-display: 'Chakra Petch', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-sans: 'IBM Plex Sans', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'PingFang SC', ui-monospace, monospace;
+
+  /* ---- 形态：刻意保持锐利，圆角越大越像消费级 SaaS ---- */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ---------------------------------------------------------------- */
+/* 基础层                                                            */
+/* ---------------------------------------------------------------- */
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html,
+  body,
+  #app {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-void);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  /* 数字不跳动。表格、时间戳、统计值全都依赖这一条。 */
+  body {
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+
+  /* 原生 select 箭头在各平台渲染差异极大（Safari 紧贴右框、
+     Windows Chrome 偏大），必须全局重置为自绘 SVG 折线。 */
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    padding-right: 36px;
+  }
+
+  select[style] {
+    padding-right: 36px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-line-strong);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--color-signal);
+    outline-offset: 1px;
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* 组件层：仪器质感的来源                                             */
+/* ---------------------------------------------------------------- */
+@layer components {
+  /* 坐标网格背景。极低对比度，只在余光里感知得到，
+     作用是让画布有「测量台」的空间感而非一片虚空。 */
+  .grid-field {
+    background-color: var(--color-void);
+    background-image:
+      linear-gradient(rgba(45, 212, 191, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(45, 212, 191, 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* 径向渐晕：四角压暗，视线自然收拢到画布中心。 */
+  .vignette::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(7, 9, 14, 0.85) 100%);
+  }
+
+  .panel {
+    background: var(--color-panel);
+    border: 1px solid var(--color-line);
+  }
+
+  /* L 形角标。整个界面「像一台仪器」的核心来源，
+     用伪元素画而非图片，缩放不失真。 */
+  .corner-cut {
+    position: relative;
+  }
+  .corner-cut::before,
+  .corner-cut::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-color: var(--color-line-strong);
+    pointer-events: none;
+  }
+  .corner-cut::before {
+    top: -1px;
+    left: -1px;
+    border-top: 1px solid;
+    border-left: 1px solid;
+  }
+  .corner-cut::after {
+    right: -1px;
+    bottom: -1px;
+    border-right: 1px solid;
+    border-bottom: 1px solid;
+  }
+
+  .label-caps {
+    font-family: var(--font-display);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-mute);
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+  }
+
+  /* 顶部扫描线：缓慢横向流光，暗示系统在持续运转。 */
+  .scanline {
+    position: relative;
+    overflow: hidden;
+  }
+  .scanline::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -30%;
+    width: 30%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-signal), transparent);
+    opacity: 0.5;
+    animation: scan 6s linear infinite;
+  }
+
+  .glow-signal {
+    box-shadow:
+      0 0 0 1px var(--color-signal),
+      0 0 24px -8px var(--color-signal);
+  }
+  .glow-violet {
+    box-shadow:
+      0 0 0 1px var(--color-violet),
+      0 0 24px -8px var(--color-violet);
+  }
+}
+
+/* ---------------------------------------------------------------- */
+/* 动效                                                              */
+/* ---------------------------------------------------------------- */
+@keyframes scan {
+  0% {
+    left: -30%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes spin-arc {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.anim-rise {
+  animation: rise 400ms var(--ease-drawer) both;
+}
+.anim-breathe {
+  animation: breathe 2s ease-in-out infinite;
+}
+.anim-spin-arc {
+  animation: spin-arc 800ms linear infinite;
+}
+
+/* 无障碍：尊重系统的减弱动效设置，全部降级为瞬时。 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
