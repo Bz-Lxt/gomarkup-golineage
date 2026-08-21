@@ -78,7 +78,7 @@ func (h *Handler) allPaths(w http.ResponseWriter, r *http.Request) {
 		Direction: queryString(r, "direction"),
 		Relations: queryList(r, "relation"),
 		MaxDepth:  queryInt(r, "max_depth", 0),
-		MaxPaths:  queryInt(r, "max_depth", 0),
+		MaxPaths:  queryInt(r, "max_paths", 0),
 	})
 	if err != nil {
 		FailErr(w, r, err)
