@@ -83,7 +83,11 @@ type Topology struct {
 // 触发裁剪时保留度数最高的节点：枢纽资产是拓扑骨架，
 // 若随机截断，用户看到的会是一堆互不相连的孤点。
 func (g *Graph) Topology(opt TopologyOptions) *Topology {
-	g.prepareTopologyRead()
+	// 全程持有读锁：批量同步会并发写入 nodes/adj/edges 等 map，
+	// 若不加锁就读，会触发 fatal error: concurrent map read and map write
+	// 直接把进程挂掉。这与 BFS/DFS/Snapshot 等只读路径的做法保持一致。
+	g.mu.RLock()
+	defer g.mu.RUnlock()
 
 	limit := opt.Limit
 	if limit <= 0 || limit > g.limits.MaxNodes {
@@ -138,11 +142,6 @@ func (g *Graph) Topology(opt TopologyOptions) *Topology {
 	}
 	out.TotalEdges = total
 	return out
-}
-
-func (g *Graph) prepareTopologyRead() {
-	g.mu.RLock()
-	defer g.mu.RUnlock()
 }
 
 func (g *Graph) statsLocked() Stats {
