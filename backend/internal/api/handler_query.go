@@ -112,7 +112,12 @@ type matrixBody struct {
 // 用 POST 而非 GET：节点 ID 列表可能有数百个，
 // 放在查询串里会超出部分代理的 URL 长度限制。
 func (h *Handler) matrixAnalysis(w http.ResponseWriter, r *http.Request) {
-	body := &matrixBody{}
+	// 用值类型而非指针：前端清空选择时会发送字面量 null，
+	// 若 body 是 *matrixBody，json.Decode(&body) 会把它置为 nil，
+	// 随后 body.NodeIDs 触发空指针解引用，被 Recover 兜成 500。
+	// 声明为值类型后，null 解码为 no-op，零值给出空 NodeIDs，
+	// 与不带请求体、传 {} 三种写法统一走「分析全图」语义。
+	var body matrixBody
 	if r.ContentLength > 0 && !decodeJSON(w, r, &body) {
 		return
 	}
