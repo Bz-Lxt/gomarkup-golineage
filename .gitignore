@@ -1,0 +1,51 @@
+# ---- Go ----
+/backend/bin/
+/backend/tmp/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+coverage.html
+vendor/
+
+# ---- Node / Vue ----
+node_modules/
+/frontend-user/dist/
+/frontend-user/.vite/
+/frontend-user/stats.html
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+
+# ---- Playwright ----
+/tests/node_modules/
+/tests/test-results/
+/tests/playwright-report/
+/tests/.playwright/
+/tests/blob-report/
+
+# ---- Env & Secrets ----
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ---- Docker volumes (local) ----
+/.data/
+/pgdata/
+
+# ---- IDE / OS ----
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---- Logs ----
+*.log
+/logs/
