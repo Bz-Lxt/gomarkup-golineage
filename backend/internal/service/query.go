@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/alkaid/golineage/internal/graph"
+	"github.com/alkaid/golineage/pkg/logger"
 )
 
 // withQueryTimeout 为图查询套上超时上下文。
@@ -302,6 +303,11 @@ type NodeDetail struct {
 }
 
 // NodeDetail 汇总资产详情，供右侧抽屉一次性渲染。
+//
+// 主体数据（节点本身、度数、关系、影响面）全部来自内存图投影，
+// 与事件库无关，因此事件库偶发不可用时详情仍可正常展示。
+// EventCount 只是辅助信息，查询失败时降级为 0 而非让整张详情页 500，
+// 前端流水面板另有 /nodes/{id}/events 与 /timeline/bounds 专门承载，不依赖此字段。
 func (s *Service) NodeDetail(ctx context.Context, id string) (*NodeDetail, error) {
 	n, err := s.repo.GetNode(ctx, id)
 	if err != nil {
@@ -321,10 +327,10 @@ func (s *Service) NodeDetail(ctx context.Context, id string) (*NodeDetail, error
 	if imp, err := s.Impact(ctx, id, 0); err == nil {
 		d.Impact = imp
 	}
-	_, total, err := s.store.List(ctx, listFilterForEntity(id))
-	if err != nil {
-		return nil, fmt.Errorf("查询资产变更记录失败: %w", err)
+	if _, total, err := s.store.List(ctx, listFilterForEntity(id)); err == nil {
+		d.EventCount = total
+	} else {
+		logger.WarnCtx(ctx, "事件库查询失败，资产详情的流水计数已降级为 0", "node_id", id, "err", err)
 	}
-	d.EventCount = total
 	return d, nil
 }
