@@ -200,9 +200,9 @@ func weaklyConnectedComponents(m [][]float64, ids []NodeID) [][]NodeID {
 	}
 
 	out := make([][]NodeID, 0, len(groups))
-	component := make([]NodeID, 0, n)
 	for _, g := range groups {
-		component = append(component[:0], g...)
+		component := make([]NodeID, len(g))
+		copy(component, g)
 		sort.Strings(component)
 		out = append(out, component)
 	}
