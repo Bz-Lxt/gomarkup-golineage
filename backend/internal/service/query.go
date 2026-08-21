@@ -10,10 +10,12 @@ import (
 
 // withQueryTimeout 为图查询套上超时上下文。
 //
-// 手写图算法在超宽查询下可能长时间占用 CPU，没有超时的话
-// 一个失控请求就会拖慢所有人的响应。
+// 超时与客户端取消都必须能及时终止计算：稠密图上的 Dijkstra / 全路径枚举
+// 是 CPU 密集型循环，若已取消的查询继续跑到自身超时，会长期占用 CPU。
+// 因此派生上下文仍派生自请求上下文 —— 客户端断连或前端取消上一条请求时，
+// 取消信号会立即传播到图算法的 ctx.Err() 检查点，而不必等到超时兜底。
 func (s *Service) withQueryTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.WithoutCancel(ctx), s.cfg.GraphQueryTimout)
+	return context.WithTimeout(ctx, s.cfg.GraphQueryTimout)
 }
 
 // TopologyQuery 全量拓扑查询参数。
