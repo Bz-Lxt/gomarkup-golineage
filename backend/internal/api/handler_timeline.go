@@ -16,7 +16,7 @@ func (h *Handler) listEvents(w http.ResponseWriter, r *http.Request) {
 		Actor:    queryString(r, "actor"),
 		Limit:    queryInt(r, "limit", 50),
 		Offset:   queryInt(r, "offset", 0),
-		Desc:     queryBool(r, "desc", false),
+		Desc:     queryBool(r, "desc", true),
 	})
 	if err != nil {
 		FailErr(w, r, err)

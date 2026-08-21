@@ -230,6 +230,7 @@ export const api = {
     event_type?: string[]
     from?: string
     to?: string
+    desc?: boolean
   }) => request<EventPage>('GET', '/timeline/events', { query }),
 
   snapshotAt: (at: string) => request<HistoricalTopology>('GET', '/timeline/snapshot', {
