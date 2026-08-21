@@ -56,13 +56,16 @@ func queryList(r *http.Request, key string) []string {
 
 // actorFrom 解析操作者标识。
 //
-// 优先取请求头 X-Actor，其次取请求体中的 actor。
+// 优先取请求体中的 actor，其次取请求头 X-Actor。
+// 代操作场景下网关会把登录账号写入 X-Actor 头，而实际执行人放在请求体的
+// actor 字段里——若头优先，执行人会被网关账号覆盖，审计就再也筛不到了。
+// 因此 body 优先，头仅作为直连（无请求体 actor）时的回退。
 // 本项目按需求约定不做用户体系，此处仅用于变更流水的归属标注。
 func actorFrom(r *http.Request, bodyActor string) string {
-	if a := strings.TrimSpace(r.Header.Get("X-Actor")); a != "" {
+	if a := strings.TrimSpace(bodyActor); a != "" {
 		return a
 	}
-	if a := strings.TrimSpace(bodyActor); a != "" {
+	if a := strings.TrimSpace(r.Header.Get("X-Actor")); a != "" {
 		return a
 	}
 	return "anonymous"
