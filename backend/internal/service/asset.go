@@ -155,7 +155,16 @@ func (s *Service) UpdateNode(ctx context.Context, id string, in UpdateNodeInput)
 //
 // 事件写入顺序刻意安排为「先关系、后节点」：重放时按序应用，
 // 关系先被逐条移除，轮到节点时已无关联边，不会出现悬空引用。
+//
+// 节点快照与关联边列表必须在持有写锁的前提下读取：
+// 若在加锁前先读，导入请求可能在读取与加锁之间插入一条新关系。
+// 下线随后级联删除了这条新关系，但级联事件是依据过期列表生成的，
+// 流水里便缺少这条关系的删除记录。重放后拓扑会多出一条已不存在的边，
+// 当前内存却查不到它——日志与投影就此分裂。
 func (s *Service) DeleteNode(ctx context.Context, id, actor, reason string) (*DeleteNodeResult, error) {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
+
 	old, err := s.repo.GetNode(ctx, id)
 	if err != nil {
 		return nil, err
@@ -164,9 +173,6 @@ func (s *Service) DeleteNode(ctx context.Context, id, actor, reason string) (*De
 	if err != nil {
 		return nil, err
 	}
-
-	s.writeMu.Lock()
-	defer s.writeMu.Unlock()
 
 	now := timeutil.Now()
 	actor, reason = normalizeActor(actor), normalizeReason(reason)
