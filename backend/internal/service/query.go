@@ -159,11 +159,15 @@ func (s *Service) ShortestPath(ctx context.Context, q PathQuery) (*graph.PathRes
 	if err != nil {
 		return nil, err
 	}
+	rels, err := parseRelationTypes(q.Relations)
+	if err != nil {
+		return nil, err
+	}
 	ctx, cancel := s.withQueryTimeout(ctx)
 	defer cancel()
 	return s.repo.ShortestPath(ctx, graph.PathOptions{
 		From: strings.TrimSpace(q.From), To: strings.TrimSpace(q.To),
-		Direction: dir,
+		Direction: dir, Relations: rels,
 	})
 }
 
