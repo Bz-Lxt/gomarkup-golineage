@@ -139,10 +139,10 @@ func (g *Graph) Impact(ctx context.Context, id NodeID, maxDepth int) (*ImpactSum
 	if err != nil {
 		return nil, err
 	}
-	if len(down.Nodes) == 1 && len(up.Nodes) == 1 {
-		return nil, nil
-	}
 
+	// 孤立节点（无上下游关系）同样需要返回可展示的零值摘要，
+	// 而不是 nil —— 前端与 /impact 端点的消费者都期望拿到一个结构体对象，
+	// 否则会因 data 为 null 而报「加载失败」。
 	s := &ImpactSummary{
 		NodeID:   id,
 		NodeName: n.Name,
