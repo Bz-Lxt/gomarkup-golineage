@@ -66,7 +66,9 @@ func (s *Service) commit(ctx context.Context, events []*eventstore.Event, apply 
 		if _, rerr := eventstore.ReplayLive(ctx, s.store, s.repo.Underlying()); rerr != nil {
 			logger.ErrorCtx(ctx, "内存投影重建失败，服务已进入降级状态", "err", rerr)
 		}
-		return fmt.Errorf("应用变更到内存图失败: %v", err)
+		// 用 %w 保留错误链，使 errors.Is 能在 FailErr 中正确识别领域错误
+		// （例如 ErrEdgeExists），将其映射为恰当的 HTTP 状态码而非一律 500。
+		return fmt.Errorf("应用变更到内存图失败: %w", err)
 	}
 
 	var lastSeq int64

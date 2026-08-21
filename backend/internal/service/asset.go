@@ -325,6 +325,14 @@ func (s *Service) UpdateEdge(ctx context.Context, id string, in UpdateEdgeInput)
 		return nil, err
 	}
 
+	// 关系类型或方向性变化可能与既有边撞键，需要在写日志之前拦截。
+	// 否则事件已落盘、内存应用失败会触发全量重放并造成流水与投影不一致。
+	if updated.Relation != old.Relation || updated.Directed != old.Directed {
+		if err := s.checkDuplicateEdge(ctx, updated); err != nil {
+			return nil, err
+		}
+	}
+
 	ev, err := eventstore.NewEdgeEvent(eventstore.EventEdgeUpdated, updated, old,
 		normalizeActor(in.Actor), normalizeReason(in.Reason), updated.UpdatedAt)
 	if err != nil {
