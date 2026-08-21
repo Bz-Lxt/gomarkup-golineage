@@ -91,8 +91,12 @@ func (h *Handler) deleteNode(w http.ResponseWriter, r *http.Request) {
 }
 
 // nodeImpact GET /api/v1/nodes/{id}/impact —— 影响面评估，删除前的风险提示。
+//
+// 深度参数取名 max_depth，与其余图查询端点（traverse / lineage / all-paths）保持一致：
+// 前端统一按 max_depth 编码查询串，此处若改用 depth 会读不到值而回退到 0，
+// 进而被 BFS 归一化为全局上限，导致用户设置的追溯深度限制失效。
 func (h *Handler) nodeImpact(w http.ResponseWriter, r *http.Request) {
-	summary, err := h.svc.Impact(r.Context(), chi.URLParam(r, "id"), queryInt(r, "depth", 0))
+	summary, err := h.svc.Impact(r.Context(), chi.URLParam(r, "id"), queryInt(r, "max_depth", 0))
 	if err != nil {
 		FailErr(w, r, err)
 		return
