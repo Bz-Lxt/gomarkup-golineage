@@ -219,8 +219,10 @@ func (s *Service) CreateEdge(ctx context.Context, in CreateEdgeInput) (*graph.Ed
 	if in.Weight != nil {
 		weight = *in.Weight
 	}
+	// directed 为指针类型：nil 表示未提供，取默认值 true；
+	// 非 nil 时无论 true/false 都应尊重调用方意图。
 	directed := true
-	if in.Directed != nil && *in.Directed {
+	if in.Directed != nil {
 		directed = *in.Directed
 	}
 
